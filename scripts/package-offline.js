@@ -50,6 +50,12 @@ const offlineBootstrap = '<script>window.__PENGUINMOD_OFFLINE_MEDIA__=' +
     'var oldOpen=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(method,url){var mapped=lookup(url);arguments[1]=mapped;return oldOpen.apply(this,arguments);};' +
     '})();</script>';
 
+// Webpack emits lazy-loaded JavaScript chunks for features such as Scratch Blocks.
+// Embed them before the entry bundle so file:// pages do not request sb.chunk.js.
+const chunkScripts = walk(outDir)
+    .filter(file => file.endsWith('.chunk.js'))
+    .map(file => fs.readFileSync(file, 'utf8'));
+
 const pages = [
     { html: 'PenguinMod.html', bundle: 'editor.bundle.js' },
     { html: 'addons.html', bundle: 'addon-settings.bundle.js' }
@@ -67,7 +73,8 @@ for (const page of pages) {
             fail('Unexpected external script in ' + page.html + ': ' + src);
         }
         replaced = true;
-        return '<script>\n' + bundle.replace(/<\/script/gi, '<\\/script') + '\n</script>';
+        const preload = chunkScripts.map(code => '<script>\n' + code.replace(/<\/script/gi, '<\\/script') + '\n</script>').join('\n');
+        return preload + '\n<script>\n' + bundle.replace(/<\/script/gi, '<\\/script') + '\n</script>';
     });
     if (!replaced) fail('No ' + page.bundle + ' script tag found in ' + page.html + '.');
     html = html.replace('</head>', offlineBootstrap + '\n</head>');
@@ -77,4 +84,4 @@ for (const page of pages) {
     console.log('[offline packager] Created ' + htmlPath + ' (' +
         (Buffer.byteLength(html) / 1024 / 1024).toFixed(2) + ' MiB)');
 }
-console.log('[offline packager] Embedded Blockly media files: ' + Object.keys(media).length);
+console.log('[offline packager] Inlined lazy JavaScript chunks: ' + chunkScripts.length);\nconsole.log('[offline packager] Embedded Blockly media files: ' + Object.keys(media).length);
