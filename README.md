@@ -292,3 +292,8 @@ Here's what will happen in the project state machine:
 We provide [Scratch](https://scratch.mit.edu) free of charge, and want to keep it that way! Please consider making a [donation](https://secure.donationpay.org/scratchfoundation/) to support our continued engineering, design, community, and resource development efforts. Donations of any size are appreciated. Thank you!
 
 -->
+
+
+## Experimental single-file offline editor
+
+This branch includes an experimental standalone HTML build. See [OFFLINE.md](OFFLINE.md) for instructions and limitations. After installing dependencies while online, run `npm run build:offline`; the generated file is `build-offline/PenguinMod.html`.
