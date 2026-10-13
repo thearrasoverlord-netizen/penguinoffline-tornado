@@ -1,22 +1,20 @@
-/* Turn webpack's production build into a single portable HTML file. */
+/* Inline the editor and addon settings pages into portable HTML files. */
 const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const outDir = path.join(root, 'build-offline');
-const htmlPath = path.join(outDir, 'PenguinMod.html');
-const bundlePath = path.join(outDir, 'offline.bundle.js');
 
 function fail(message) {
     console.error('[offline packager] ' + message);
     process.exit(1);
 }
-if (!fs.existsSync(htmlPath)) fail('Missing build-offline/PenguinMod.html. Run webpack.offline.config.js first.');
-if (!fs.existsSync(bundlePath)) fail('Missing offline.bundle.js. The build may have emitted extra chunks.');
-
-let html = fs.readFileSync(htmlPath, 'utf8');
-let bundle = fs.readFileSync(bundlePath, 'utf8');
-
+function walk(dir) {
+    return fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
+        const full = path.join(dir, entry.name);
+        return entry.isDirectory() ? walk(full) : [full];
+    });
+}
 function mimeFor(file) {
     const ext = path.extname(file).toLowerCase();
     return ({
@@ -30,26 +28,9 @@ function mimeFor(file) {
 function dataUri(file) {
     return 'data:' + mimeFor(file) + ';base64,' + fs.readFileSync(file).toString('base64');
 }
-function walk(dir) {
-    return fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
-        const full = path.join(dir, entry.name);
-        return entry.isDirectory() ? walk(full) : [full];
-    });
-}
 
-// Inline every file-loader asset into the generated JavaScript.
-const assetDir = path.join(outDir, 'static', 'assets');
-if (fs.existsSync(assetDir)) {
-    for (const file of walk(assetDir)) {
-        const relative = path.relative(outDir, file).split(path.sep).join('/');
-        const uri = dataUri(file);
-        bundle = bundle.split('/' + relative).join(uri);
-        bundle = bundle.split(relative).join(uri);
-    }
-}
-
-// Blockly requests media by filename at runtime. Embed it in a lookup table
-// and translate those URLs to data URLs before the editor starts.
+// Blockly requests media by filename at runtime. Embed all available media once
+// in each page and map the normal media URLs to their data URLs.
 const mediaDir = path.join(outDir, 'static', 'blocks-media');
 const media = {};
 if (fs.existsSync(mediaDir)) {
@@ -69,22 +50,31 @@ const offlineBootstrap = '<script>window.__PENGUINMOD_OFFLINE_MEDIA__=' +
     'var oldOpen=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(method,url){var mapped=lookup(url);arguments[1]=mapped;return oldOpen.apply(this,arguments);};' +
     '})();</script>';
 
-const inlineBundle = '<script>\n' + bundle.replace(/<\/script/gi, '<\\/script') + '\n</script>';
-let replaced = false;
-html = html.replace(/<script\b[^>]*\bsrc=["']([^"']+\.js(?:\?[^"']*)?)["'][^>]*>\s*<\/script>/gi, (tag, src) => {
-    if (path.basename(src.split('?')[0]) !== 'offline.bundle.js') {
-        fail('Unexpected external script in generated HTML: ' + src);
-    }
-    replaced = true;
-    return inlineBundle;
-});
-if (!replaced) fail('No offline.bundle.js script tag found in generated HTML.');
-
-html = html.replace('</head>', offlineBootstrap + '\n</head>');
-if (/<script\b[^>]*\bsrc=["']https?:/i.test(html)) fail('A remote script tag remains in the HTML.');
-if (/offline\.bundle\.js/.test(html)) fail('A reference to the external bundle remains in the HTML.');
-
-fs.writeFileSync(htmlPath, html, 'utf8');
-console.log('[offline packager] Created ' + htmlPath);
-console.log('[offline packager] HTML size: ' + (Buffer.byteLength(html) / 1024 / 1024).toFixed(2) + ' MiB');
+const pages = [
+    { html: 'PenguinMod.html', bundle: 'editor.bundle.js' },
+    { html: 'addons.html', bundle: 'addon-settings.bundle.js' }
+];
+for (const page of pages) {
+    const htmlPath = path.join(outDir, page.html);
+    const bundlePath = path.join(outDir, page.bundle);
+    if (!fs.existsSync(htmlPath)) fail('Missing ' + page.html + ' from webpack output.');
+    if (!fs.existsSync(bundlePath)) fail('Missing ' + page.bundle + ' from webpack output.');
+    let html = fs.readFileSync(htmlPath, 'utf8');
+    const bundle = fs.readFileSync(bundlePath, 'utf8');
+    let replaced = false;
+    html = html.replace(/<script\\b[^>]*\\bsrc=["']([^"']+\\.js(?:\\?[^"']*)?)["'][^>]*>\\s*<\\/script>/gi, (tag, src) => {
+        if (path.basename(src.split('?')[0]) !== page.bundle) {
+            fail('Unexpected external script in ' + page.html + ': ' + src);
+        }
+        replaced = true;
+        return '<script>\\n' + bundle.replace(/<\\/script/gi, '<\\\\/script') + '\\n</script>';
+    });
+    if (!replaced) fail('No ' + page.bundle + ' script tag found in ' + page.html + '.');
+    html = html.replace('</head>', offlineBootstrap + '\\n</head>');
+    if (/<script\\b[^>]*\\bsrc=["']https?:/i.test(html)) fail('A remote script tag remains in ' + page.html + '.');
+    if (html.includes(page.bundle)) fail('A reference to ' + page.bundle + ' remains in ' + page.html + '.');
+    fs.writeFileSync(htmlPath, html, 'utf8');
+    console.log('[offline packager] Created ' + htmlPath + ' (' +
+        (Buffer.byteLength(html) / 1024 / 1024).toFixed(2) + ' MiB)');
+}
 console.log('[offline packager] Embedded Blockly media files: ' + Object.keys(media).length);
