@@ -62,16 +62,16 @@ for (const page of pages) {
     let html = fs.readFileSync(htmlPath, 'utf8');
     const bundle = fs.readFileSync(bundlePath, 'utf8');
     let replaced = false;
-    html = html.replace(/<script\\b[^>]*\\bsrc=["']([^"']+\\.js(?:\\?[^"']*)?)["'][^>]*>\\s*<\\/script>/gi, (tag, src) => {
+    html = html.replace(/<script\b[^>]*\bsrc=["']([^"']+\.js(?:\?[^"']*)?)["'][^>]*>\s*<\/script>/gi, (tag, src) => {
         if (path.basename(src.split('?')[0]) !== page.bundle) {
             fail('Unexpected external script in ' + page.html + ': ' + src);
         }
         replaced = true;
-        return '<script>\\n' + bundle.replace(/<\\/script/gi, '<\\\\/script') + '\\n</script>';
+        return '<script>\n' + bundle.replace(/<\/script/gi, '<\\/script') + '\n</script>';
     });
     if (!replaced) fail('No ' + page.bundle + ' script tag found in ' + page.html + '.');
-    html = html.replace('</head>', offlineBootstrap + '\\n</head>');
-    if (/<script\\b[^>]*\\bsrc=["']https?:/i.test(html)) fail('A remote script tag remains in ' + page.html + '.');
+    html = html.replace('</head>', offlineBootstrap + '\n</head>');
+    if (/<script\b[^>]*\bsrc=["']https?:/i.test(html)) fail('A remote script tag remains in ' + page.html + '.');
     if (html.includes(page.bundle)) fail('A reference to ' + page.bundle + ' remains in ' + page.html + '.');
     fs.writeFileSync(htmlPath, html, 'utf8');
     console.log('[offline packager] Created ' + htmlPath + ' (' +
