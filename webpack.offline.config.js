@@ -13,7 +13,7 @@ config.entry = { editor: './src/playground/editor.jsx' };
 config.output = {
     ...config.output,
     path: outputDir,
-    filename: 'offline.bundle.js',
+    filename: '[name].bundle.js',
     chunkFilename: '[name].chunk.js',
     publicPath: ''
 };
@@ -42,12 +42,18 @@ config.plugins = (config.plugins || []).filter(plugin => {
     const name = plugin && plugin.constructor && plugin.constructor.name;
     return name !== 'HtmlWebpackPlugin' && name !== 'TWGenerateServiceWorkerPlugin';
 });
-config.plugins.push(new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }));
 config.plugins.push(new HtmlWebpackPlugin({
     chunks: ['editor'],
     template: 'src/playground/index-offline.ejs',
     filename: 'PenguinMod.html',
     title: 'PenguinMod Offline'
+}));
+config.entry['addon-settings'] = './src/playground/addon-settings.jsx';
+config.plugins.push(new HtmlWebpackPlugin({
+    chunks: ['addon-settings'],
+    template: 'src/playground/simple.ejs',
+    filename: 'addons.html',
+    title: 'PenguinMod Offline - Addon Settings'
 }));
 
 module.exports = config;
