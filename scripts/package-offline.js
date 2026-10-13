@@ -30,14 +30,16 @@ function mimeFor(file) {
 function dataUri(file) {
     return 'data:' + mimeFor(file) + ';base64,' + fs.readFileSync(file).toString('base64');
 }
+function walk(dir) {
+    return fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
+        const full = path.join(dir, entry.name);
+        return entry.isDirectory() ? walk(full) : [full];
+    });
+}
 
 // Inline every file-loader asset into the generated JavaScript.
 const assetDir = path.join(outDir, 'static', 'assets');
 if (fs.existsSync(assetDir)) {
-    const walk = dir => fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
-        const full = path.join(dir, entry.name);
-        return entry.isDirectory() ? walk(full) : [full];
-    });
     for (const file of walk(assetDir)) {
         const relative = path.relative(outDir, file).split(path.sep).join('/');
         const uri = dataUri(file);
@@ -46,15 +48,11 @@ if (fs.existsSync(assetDir)) {
     }
 }
 
-// Blockly requests media by filename at runtime. Embed it in a lookup table,
-// then translate those media URLs to data URLs before the editor starts.
+// Blockly requests media by filename at runtime. Embed it in a lookup table
+// and translate those URLs to data URLs before the editor starts.
 const mediaDir = path.join(outDir, 'static', 'blocks-media');
 const media = {};
 if (fs.existsSync(mediaDir)) {
-    const walk = dir => fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
-        const full = path.join(dir, entry.name);
-        return entry.isDirectory() ? walk(full) : [full];
-    });
     for (const file of walk(mediaDir)) {
         const relative = path.relative(mediaDir, file).split(path.sep).join('/');
         media[relative] = dataUri(file);
@@ -71,19 +69,20 @@ const offlineBootstrap = '<script>window.__PENGUINMOD_OFFLINE_MEDIA__=' +
     'var oldOpen=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(method,url){var mapped=lookup(url);arguments[1]=mapped;return oldOpen.apply(this,arguments);};' +
     '})();</script>';
 
-const scripts = [];
-html = html.replace(/<script\\b[^>]*\\bsrc=["']([^"']+\\.js(?:\\?[^"']*)?)["'][^>]*>\\s*<\\/script>/gi, (tag, src) => {
-    const filename = path.basename(src.split('?')[0]);
-    const file = path.join(outDir, filename);
-    if (!fs.existsSync(file)) fail('Unexpected external script in generated HTML: ' + src);
-    scripts.push(fs.readFileSync(file, 'utf8'));
-    return '';
+const inlineBundle = '<script>\n' + bundle.replace(/<\/script/gi, '<\\/script') + '\n</script>';
+let replaced = false;
+html = html.replace(/<script\b[^>]*\bsrc=["']([^"']+\.js(?:\?[^"']*)?)["'][^>]*>\s*<\/script>/gi, (tag, src) => {
+    if (path.basename(src.split('?')[0]) !== 'offline.bundle.js') {
+        fail('Unexpected external script in generated HTML: ' + src);
+    }
+    replaced = true;
+    return inlineBundle;
 });
-if (!scripts.length) fail('No webpack script tag found in generated HTML.');
-bundle = scripts.join('\n') + '\n' + bundle;
-html = html.replace('</head>', offlineBootstrap + '\\n</head>');
-html = html.replace('</body>', '<script>\\n' + bundle + '\\n</script>\\n</body>');
-if (/<script\\b[^>]*\\bsrc=["']https?:/i.test(html)) fail('A remote script tag remains in the HTML.');
+if (!replaced) fail('No offline.bundle.js script tag found in generated HTML.');
+
+html = html.replace('</head>', offlineBootstrap + '\n</head>');
+if (/<script\b[^>]*\bsrc=["']https?:/i.test(html)) fail('A remote script tag remains in the HTML.');
+if (/offline\.bundle\.js/.test(html)) fail('A reference to the external bundle remains in the HTML.');
 
 fs.writeFileSync(htmlPath, html, 'utf8');
 console.log('[offline packager] Created ' + htmlPath);
