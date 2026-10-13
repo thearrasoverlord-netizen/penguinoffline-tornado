@@ -17,6 +17,19 @@ config.output = {
     chunkFilename: '[name].chunk.js',
     publicPath: ''
 };
+// The normal web build emits imported icons as separate files. In the offline
+// build, inline every imported image, icon, font, and media asset as a data URI
+// so controls such as the green flag and stop button work from file:// URLs.
+config.module.rules = config.module.rules.filter(rule => rule.loader !== 'file-loader');
+config.module.rules.push({
+    test: /\.(svg|png|wav|gif|jpe?g|mp3|ttf|otf|ico|webp|woff2?|mp4|webm|ogg|m4a|aac|oga)$/i,
+    loader: 'url-loader',
+    options: {
+        limit: Number.MAX_SAFE_INTEGER,
+        esModule: false
+    }
+});
+
 config.optimization = {
     ...(config.optimization || {}),
     splitChunks: false,
