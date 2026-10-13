@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google" content="notranslate">
+  <meta name="description" content="PenguinMod offline editor">
+  <title><%= htmlWebpackPlugin.options.title %></title>
+  <style>
+    html, body, #app { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+    #splash { position: absolute; width: 100%; height: 100%; top: 0; left: 0; display: flex; align-items: center; justify-content: center; font-family: Arial, sans-serif; color: #00c3ff; }
+    .tw-loaded #splash, #splash-content { display: none; }
+    #splash[splash-theme="dark"] { background-color: #333; color: #fff; }
+    #splash-spinner:after { content: " "; display: block; width: 64px; height: 64px; border-radius: 50%; border: 6px solid; border-color: currentColor transparent currentColor transparent; animation: splash-spinner 1.2s linear infinite; }
+    @keyframes splash-spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+  <script>
+    (function () {
+      try {
+        var theme = localStorage.getItem('tw:theme');
+        if (theme ? theme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <div id="splash" aria-hidden="true"><noscript><h1>Enable JavaScript</h1></noscript><div id="splash-content"><div id="splash-spinner"></div></div></div>
+  <div id="app"></div>
+</body>
+</html>
