@@ -43,8 +43,8 @@ if (fs.existsSync(assetDir)) {
     for (const file of walk(assetDir)) {
         const relative = path.relative(outDir, file).split(path.sep).join('/');
         const uri = dataUri(file);
-        bundle = bundle.split(relative).join(uri);
         bundle = bundle.split('/' + relative).join(uri);
+        bundle = bundle.split(relative).join(uri);
     }
 }
 
