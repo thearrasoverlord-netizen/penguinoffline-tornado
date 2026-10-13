@@ -84,4 +84,5 @@ for (const page of pages) {
     console.log('[offline packager] Created ' + htmlPath + ' (' +
         (Buffer.byteLength(html) / 1024 / 1024).toFixed(2) + ' MiB)');
 }
-console.log('[offline packager] Inlined lazy JavaScript chunks: ' + chunkScripts.length);\nconsole.log('[offline packager] Embedded Blockly media files: ' + Object.keys(media).length);
+console.log('[offline packager] Inlined lazy JavaScript chunks: ' + chunkScripts.length);
+console.log('[offline packager] Embedded Blockly media files: ' + Object.keys(media).length);
