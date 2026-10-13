@@ -19,7 +19,7 @@
         "test:smoke": "jest --runInBand test[\\\\/]smoke",
         "watch": "webpack --colors --watch",
         "install-slow": "rimraf ./node_modules && rimraf ./package-lock.json && npm i --force",
-        "build:offline": "cross-env NODE_OPTIONS=\"--openssl-legacy-provider\" NODE_ENV=production webpack --config webpack.offline.config.js --colors --bail && node scripts/package-offline.js"
+        "build:offline": "cross-env NODE_ENV=production webpack --config webpack.offline.config.js --colors --bail && node scripts/package-offline.js"
     },
     "author": "Massachusetts Institute of Technology",
     "license": "GPL-3.0",
