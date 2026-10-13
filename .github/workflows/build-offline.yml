@@ -25,6 +25,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: PenguinMod-Offline-HTML
-          path: build-offline/PenguinMod.html
+          path: |
+            build-offline/PenguinMod.html
+            build-offline/addons.html
           if-no-files-found: error
           retention-days: 14
