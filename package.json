@@ -2,7 +2,7 @@
     "name": "scratch-gui",
     "version": "0.1.0",
     "description": "GraphicaL User Interface for creating and running Scratch 3.0 projects",
-    "main": "./dist/scratch-gui.js",
+    "main": "electron/main.js",
     "scripts": {
         "buildall": "npm run build && npm run deploy",
         "build": "cross-env NODE_OPTIONS=\"--openssl-legacy-provider\" webpack --colors --bail",
@@ -19,7 +19,9 @@
         "test:smoke": "jest --runInBand test[\\\\/]smoke",
         "watch": "webpack --colors --watch",
         "install-slow": "rimraf ./node_modules && rimraf ./package-lock.json && npm i --force",
-        "build:offline": "cross-env NODE_ENV=production webpack --config webpack.offline.config.js --colors --bail && node scripts/package-offline.js"
+        "build:offline": "cross-env NODE_ENV=production webpack --config webpack.offline.config.js --colors --bail && node scripts/package-offline.js",
+        "desktop:dev": "npm run build:offline && electron .",
+        "desktop:dist": "npm run build:offline && electron-builder --win portable"
     },
     "author": "Massachusetts Institute of Technology",
     "license": "GPL-3.0",
@@ -146,7 +148,9 @@
         "webpack-cli": "3.3.12",
         "webpack-dev-server": "3.11.2",
         "webpack-hash-cache": "^0.4.8",
-        "webpack-sources": "3.2.3"
+        "webpack-sources": "3.2.3",
+        "electron": "^38.0.0",
+        "electron-builder": "^26.0.12"
     },
     "jest": {
         "setupFiles": [
@@ -160,6 +164,31 @@
             "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/test/__mocks__/fileMock.js",
             "\\.(css|less)$": "<rootDir>/test/__mocks__/styleMock.js",
             "editor-msgs(\\.js)?$": "<rootDir>/test/__mocks__/editor-msgs-mock.js"
+        }
+    },
+    "build": {
+        "appId": "net.penguinoffline.desktop",
+        "productName": "PenguinMod Offline",
+        "directories": {
+            "output": "release"
+        },
+        "files": [
+            "electron/main.js",
+            "package.json",
+            "build-offline/**/*"
+        ],
+        "win": {
+            "target": [
+                {
+                    "target": "portable",
+                    "arch": [
+                        "x64"
+                    ]
+                }
+            ]
+        },
+        "portable": {
+            "artifactName": "PenguinMod-Offline-${version}-Windows-x64.exe"
         }
     }
 }
