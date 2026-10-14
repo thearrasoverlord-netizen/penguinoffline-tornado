@@ -93,6 +93,51 @@
     flex-grow: 0;
 }
 
+.internet-filter-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 100%;
+    margin: 0 0 8px;
+}
+
+.internet-filter-label {
+    color: $text-primary;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.internet-filter-select {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 2.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid $ui-black-transparent;
+    background-color: $ui-white;
+    color: $text-primary;
+    font: inherit;
+    cursor: pointer;
+    outline-offset: 2px;
+}
+
+.internet-filter-select:hover {
+    border-color: $ui-black-transparent;
+    filter: brightness(0.97);
+}
+
+.internet-filter-select:focus-visible {
+    outline: 2px solid $motion-primary;
+}
+
+[theme="dark"] .internet-filter-select {
+    background-color: $ui-primary;
+    color: white;
+    border-color: $ui-black-transparent;
+}
+
 .filter-input {
     width: 11.5rem;
     transition: .2s;
