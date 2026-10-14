@@ -42,10 +42,10 @@ if (fs.existsSync(mediaDir)) {
 const offlineBootstrap = '<script>window.__PENGUINMOD_OFFLINE_MEDIA__=' +
     JSON.stringify(media).replace(/</g, '\\u003c') + ';(function(){' +
     'var map=window.__PENGUINMOD_OFFLINE_MEDIA__||{};' +
-    'function lookup(value){if(typeof value!=="string")return value;var s=value.replace(/\\\\/g,"/");var marker="/blocks-media/";var i=s.indexOf(marker);var key=i>=0?s.slice(i+marker.length):s.indexOf("blocks-media/")>=0?s.slice(s.indexOf("blocks-media/")+13):"";key=key.replace(/^\\.\\//,"");return map[key]||value;}' +
+    'function lookup(value){if(typeof value!=="string")return value;var s=value.replace(/\\\\/g,"/").split("#")[0].split("?")[0];try{s=decodeURIComponent(s);}catch(e){}var marker="/blocks-media/";var i=s.lastIndexOf(marker);var key=i>=0?s.slice(i+marker.length):s.indexOf("blocks-media/")>=0?s.slice(s.lastIndexOf("blocks-media/")+13):"";key=key.replace(/^\\.\\//,"");if(map[key])return map[key];var tail=key.split("/").pop();return map[tail]||value;}' +
     'var imageSrc=Object.getOwnPropertyDescriptor(HTMLImageElement.prototype,"src");' +
     'if(imageSrc&&imageSrc.set)Object.defineProperty(HTMLImageElement.prototype,"src",{configurable:true,enumerable:imageSrc.enumerable,get:imageSrc.get,set:function(v){imageSrc.set.call(this,lookup(v));}});' +
-    'var setAttr=Element.prototype.setAttribute;Element.prototype.setAttribute=function(n,v){if((this.tagName==="IMG"&&String(n).toLowerCase()==="src")||(this.tagName==="AUDIO"&&String(n).toLowerCase()==="src")||(this.tagName==="SOURCE"&&String(n).toLowerCase()==="src"))v=lookup(v);return setAttr.call(this,n,v);};' +
+    'var setAttr=Element.prototype.setAttribute;Element.prototype.setAttribute=function(n,v){var name=String(n).toLowerCase();if(((this.tagName==="IMG"||this.tagName==="AUDIO"||this.tagName==="SOURCE")&&name==="src")||(this.namespaceURI==="http://www.w3.org/2000/svg"&&(name==="href"||name==="xlink:href")))v=lookup(v);return setAttr.call(this,n,v);};' +
     'if(window.fetch){var oldFetch=window.fetch;window.fetch=function(input,init){var url=typeof input==="string"?input:input&&input.url;var mapped=lookup(url);if(mapped!==url&&typeof mapped==="string"&&mapped.indexOf("data:")===0)input=mapped;return oldFetch.call(this,input,init);};}' +
     'var oldOpen=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(method,url){var mapped=lookup(url);arguments[1]=mapped;return oldOpen.apply(this,arguments);};' +
     '})();</script>';
