@@ -73,7 +73,7 @@ for (const page of pages) {
             fail('Unexpected external script in ' + page.html + ': ' + src);
         }
         replaced = true;
-        const preload = chunkScripts.map(code => '<script>\n' + code.replace(/<\/script/gi, '<\\/script') + '\n</script>').join('\n');
+        const preload = '<script>window.webpackJsonp = window.webpackJsonp || [];</script>\n' + chunkScripts.map(code => '<script>\n' + code.replace(/<\/script/gi, '<\\/script') + '\n</script>').join('\n');
         return preload + '\n<script>\n' + bundle.replace(/<\/script/gi, '<\\/script') + '\n</script>';
     });
     if (!replaced) fail('No ' + page.bundle + ' script tag found in ' + page.html + '.');
