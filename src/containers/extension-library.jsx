@@ -176,6 +176,10 @@ class ExtensionLibrary extends React.PureComponent {
             return;
         }
         const url = (item.extensionURL ? item.extensionURL : extensionId);
+        // Objects uses the bundled Arrays extension for nested array values and helpers.
+        if (extensionId === 'dogeiscutObject' && !this.props.vm.extensionManager.isExtensionLoaded('jwArray')) {
+            await this.props.vm.extensionManager.loadExtensionURL('jwArray');
+        }
         if (item._unsandboxed) {
             if (url.startsWith("data:")) {
                 manuallyTrustExtension(url);
