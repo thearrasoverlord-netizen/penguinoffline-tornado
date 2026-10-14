@@ -76,7 +76,7 @@ class LibraryComponent extends React.Component {
             selectedTags: [],
             favorites: [],
             collapsed: false,
-            showInternetDependent: false,
+            internetFilter: 'all',
             loaded: false,
             data: props.data
         };
@@ -297,14 +297,15 @@ class LibraryComponent extends React.Component {
             const url = item.extensionURL || item.extensionId || '';
             return item.internetConnectionRequired === true || /^https?:\/\//i.test(url);
         };
-        if (this.state.showInternetDependent) {
+        if (this.state.internetFilter === 'internet') {
             filtered = filtered.filter(needsInternetToLoad);
+        } else if (this.state.internetFilter === 'offline') {
+            filtered = filtered.filter(item => !needsInternetToLoad(item));
         }
 
-        // Offline-capable extensions always come first; favorites are prioritized
-        // only within each compatibility group.
+        // Offline-capable extensions appear first in the default "all" view.
         const fully_filtered = filtered.slice().sort((a, b) => {
-            if (!this.state.showInternetDependent) {
+            if (this.state.internetFilter === 'all') {
                 const internetDifference = Number(needsInternetToLoad(a)) - Number(needsInternetToLoad(b));
                 if (internetDifference !== 0) return internetDifference;
             }
@@ -381,16 +382,19 @@ class LibraryComponent extends React.Component {
                                 />
                                 <Divider className={classNames(styles.filterBarItem, styles.divider)} />
                                 {this.props.actor === 'ExtensionLibrary' && (
-                                    <button
-                                        type="button"
-                                        className={classNames(styles.filterBarItem)}
-                                        style={{ width: '100%', marginBottom: '8px', padding: '8px', cursor: 'pointer' }}
-                                        onClick={() => this.setState(state => ({
-                                            showInternetDependent: !state.showInternetDependent
-                                        }))}
-                                    >
-                                        {this.state.showInternetDependent ? 'Show all extensions' : 'Show internet dependent'}
-                                    </button>
+                                    <label className={styles.internetFilterWrapper}>
+                                        <span className={styles.internetFilterLabel}>Filters</span>
+                                        <select
+                                            className={classNames(styles.filterBarItem, styles.internetFilterSelect)}
+                                            value={this.state.internetFilter}
+                                            onChange={event => this.setState({ internetFilter: event.target.value })}
+                                            aria-label="Filter extensions by internet requirements"
+                                        >
+                                            <option value="all">Show every extension</option>
+                                            <option value="internet">Show internet needed only</option>
+                                            <option value="offline">Show offline only</option>
+                                        </select>
+                                    </label>
                                 )}
                             </div>
                         )}
