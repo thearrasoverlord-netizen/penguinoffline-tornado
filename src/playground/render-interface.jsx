@@ -64,7 +64,10 @@ if (process.env.ANNOUNCEMENT) {
 
 const handleClickAddonSettings = () => {
     const path = process.env.ROUTING_STYLE === 'wildcard' ? 'addons' : 'addons.html';
-    window.open(`${process.env.ROOT}${path}`);
+    // Resolve against the currently opened HTML file so this also works from
+    // file:// when the offline bundle has been extracted from its ZIP.
+    const target = new URL(`${process.env.ROOT}${path}`, window.location.href);
+    window.open(target.href, '_blank');
 };
 
 const xmlEscape = function (unsafe) {
