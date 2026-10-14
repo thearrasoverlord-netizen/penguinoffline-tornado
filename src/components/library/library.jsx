@@ -295,19 +295,23 @@ class LibraryComponent extends React.Component {
 
         const needsInternetToLoad = item => {
             const url = item.extensionURL || item.extensionId || '';
-            return item.internetConnectionRequired === true || /^https?:\\/\\//i.test(url);
+            return item.internetConnectionRequired === true || /^https?:\/\//i.test(url);
         };
         if (this.state.showInternetDependent) {
             filtered = filtered.filter(needsInternetToLoad);
-        } else {
-            // Keep extensions that can load offline at the top of the list.
-            filtered = filtered.slice().sort((a, b) => Number(needsInternetToLoad(a)) - Number(needsInternetToLoad(b)));
         }
 
-        const fully_filtered = [].concat(
-            filtered.filter(item => (this.state.favorites.includes(item.extensionId))),
-            filtered.filter(item => (!this.state.favorites.includes(item.extensionId)))
-        ).map(item => Object.assign(item, { custom: !!item.custom }));
+        // Offline-capable extensions always come first; favorites are prioritized
+        // only within each compatibility group.
+        const fully_filtered = filtered.slice().sort((a, b) => {
+            if (!this.state.showInternetDependent) {
+                const internetDifference = Number(needsInternetToLoad(a)) - Number(needsInternetToLoad(b));
+                if (internetDifference !== 0) return internetDifference;
+            }
+            const favoriteDifference = Number(this.state.favorites.includes(b.extensionId)) -
+                Number(this.state.favorites.includes(a.extensionId));
+            return favoriteDifference;
+        }).map(item => Object.assign(item, { custom: !!item.custom }));
 
         return fully_filtered;
     }
