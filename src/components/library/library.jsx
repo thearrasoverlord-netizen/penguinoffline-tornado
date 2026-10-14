@@ -76,6 +76,7 @@ class LibraryComponent extends React.Component {
             selectedTags: [],
             favorites: [],
             collapsed: false,
+            showInternetDependent: false,
             loaded: false,
             data: props.data
         };
@@ -286,10 +287,21 @@ class LibraryComponent extends React.Component {
         });
     }
     getFilteredData () {
-        const filtered = this.createFilteredData();
+        let filtered = this.createFilteredData();
 
         if (this.props.actor !== "ExtensionLibrary") {
             return filtered;
+        }
+
+        const needsInternetToLoad = item => {
+            const url = item.extensionURL || item.extensionId || '';
+            return item.internetConnectionRequired === true || /^https?:\\/\\//i.test(url);
+        };
+        if (this.state.showInternetDependent) {
+            filtered = filtered.filter(needsInternetToLoad);
+        } else {
+            // Keep extensions that can load offline at the top of the list.
+            filtered = filtered.slice().sort((a, b) => Number(needsInternetToLoad(a)) - Number(needsInternetToLoad(b)));
         }
 
         const fully_filtered = [].concat(
@@ -364,6 +376,18 @@ class LibraryComponent extends React.Component {
                                     onClear={this.handleFilterClear}
                                 />
                                 <Divider className={classNames(styles.filterBarItem, styles.divider)} />
+                                {this.props.actor === 'ExtensionLibrary' && (
+                                    <button
+                                        type="button"
+                                        className={classNames(styles.filterBarItem)}
+                                        style={{ width: '100%', marginBottom: '8px', padding: '8px', cursor: 'pointer' }}
+                                        onClick={() => this.setState(state => ({
+                                            showInternetDependent: !state.showInternetDependent
+                                        }))}
+                                    >
+                                        {this.state.showInternetDependent ? 'Show all extensions' : 'Show internet dependent'}
+                                    </button>
+                                )}
                             </div>
                         )}
                         {this.props.tags &&
