@@ -23,6 +23,8 @@ jobs:
         run: npm install --legacy-peer-deps
       - name: Build standalone HTML
         run: npm run build:offline
+        env:
+          NODE_OPTIONS: --openssl-legacy-provider
       - name: Upload standalone HTML
         uses: actions/upload-artifact@v4
         with:
