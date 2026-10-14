@@ -183,6 +183,9 @@ import jgJSONExtensionIcon from './penguinmod/extensions/json.png';
 
 // default icon if one is not made yet...
 import defaultExtensionIcon from './penguinmod/extensions/placeholder.png';
+import dogeiscutObjectSource from '!!raw-loader!./penguinmod/extensions/dogeiscutObject.js';
+
+const dogeiscutObjectURL = 'data:text/javascript;charset=utf-8,' + encodeURIComponent(dogeiscutObjectSource);
 
 const urlParams = new URLSearchParams(location.search);
 const IsLocal = String(window.location.href).startsWith(`http://localhost:`);
@@ -867,8 +870,10 @@ const menuItems = [
     },
     {
         name: 'Objects',
-        extensionId: 'https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutObject.js',
-        iconURL: 'https://extensions.penguinmod.com/images/DogeisCut/dogeiscutObject.svg',
+        extensionId: 'dogeiscutObject',
+        extensionURL: dogeiscutObjectURL,
+        _unsandboxed: true,
+        iconURL: jwStructsExtensionIcon,
         tags: ['penguinmod', 'datamgmt'],
         description: 'Store data efficiently in multi-purpose objects.',
         extDeveloper: 'DogeisCut',
